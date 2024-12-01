@@ -1,0 +1,26 @@
+<app-header [isModal]="true" title="Chat"></app-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item *ngFor="let message of messages$ | async">
+      <ion-label>
+        <strong>
+          <!-- Si el mensaje lo envió el usuario, mostrar su nombre. Si el mensaje lo envió el conductor, mostrar el nombre del conductor -->
+          {{ message.senderUid === userUid ? 'Reservante' : (message.senderUid === productCreatorUid ? productCreatorName : 'Otro') }}:
+        </strong>
+        <p>{{ message.text }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-footer>
+    <ion-item>
+      <ion-input
+        [(ngModel)]="messageText"
+        placeholder="Escribe un mensaje..."
+        type="text"
+      ></ion-input>
+      <ion-button (click)="sendMessage()" [disabled]="!messageText.trim()" color="secondary">Enviar</ion-button>
+    </ion-item>
+  </ion-footer>
+</ion-content>

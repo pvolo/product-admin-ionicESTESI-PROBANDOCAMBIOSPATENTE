@@ -1,0 +1,18 @@
+
+<app-header [showMenu]="true" title="Detalles"></app-header>
+<ion-content>
+  <ion-item button detail (click)="openVehicleModal()">
+    <ion-icon color="warning" slot="start" name="car-outline"></ion-icon>
+    <ion-label color="secondary">MIS VEHICULOS</ion-label>
+  </ion-item>
+      <br>
+      <ion-item button (click)="openVerReservados()"  detail>
+        <ion-icon color="warning" slot="start" name="person-circle-outline"></ion-icon>
+        <ion-label color="secondary">USUARIOS ACEPTADOS</ion-label>
+      </ion-item>
+      <br>
+      <ion-item button (click)="openReservationsModal()" detail>
+        <ion-icon color="warning" slot="start" name="save-outline"></ion-icon>
+        <ion-label color="secondary">HISTORIAL RESERVAS</ion-label>
+      </ion-item>
+</ion-content>

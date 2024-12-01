@@ -1,0 +1,7 @@
+{
+  "name": "itakeuapp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

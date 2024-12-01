@@ -1,0 +1,117 @@
+<app-header [isModal]="true" [title]="product ? 'Actualizar Viaje': 'Agregar Viaje'"></app-header>
+
+<ion-content>
+
+  <form [formGroup]="form" class="ion-padding ion-text-center" (ngSubmit)="submit()" (keypress.enter)="submit()">
+
+
+<!--  Si existe imagen -->
+  <ion-avatar *ngIf="form.value.image">
+    <img [src]="form.value.image" />
+  </ion-avatar>
+
+<!--  Si no existe imagen -->
+<ion-icon class="image-icon" *ngIf="!form.value.image" name="image-outline"></ion-icon>
+<br>
+
+<!--  TOMAR/SELECCIONAR IMAGEN-->
+<ion-button (click)="takeImage()" mode="ios" size="small" shape="round" color="warning">
+  <br color="secondary">  Tomar/Seleccionar <br> <br>
+</ion-button>
+
+<!--MARCAR UBICACIONES-->
+<ion-item button detail (click)="irAMap()">
+  <ion-icon color="secondary" slot="start" name="pin-outline"></ion-icon>
+  <ion-label (click)="cerrarModal()"> <br> Marcar Ubicaciones </ion-label>
+</ion-item>
+
+<ion-item>
+  <ion-label>Seleccionar Ruta</ion-label>
+  <ion-select formControlName="nombreRuta" placeholder="Selecciona una ruta">
+    <!-- Asegúrate de que el nombreRuta se muestra correctamente y se selecciona correctamente -->
+    <ion-select-option *ngFor="let ubicacion of (ubicaciones$ | async)" [value]="ubicacion.nombreRuta">
+      {{ ubicacion.nombreRuta }}
+    </ion-select-option>
+  </ion-select>
+</ion-item>
+
+<ion-item>
+  <ion-label>Estado Viaje</ion-label>
+  <ion-select formControlName="estadoViaje" placeholder="Seleccione Estado">
+    <ion-select-option value="Disponible">Disponible</ion-select-option>
+    <ion-select-option value="En Camino">En Camino</ion-select-option>
+    <ion-select-option value="Finalizado">Finalizado</ion-select-option>
+  </ion-select>
+</ion-item>
+
+<!--PATENTE-->
+
+
+<!-- Validadores de la Patente -->
+<div class="validators" *ngIf="form.controls.patente.errors && form.controls.patente.touched">
+  <div *ngIf="form.controls.patente.errors?.['required']">Este campo es requerido.</div>
+  <div *ngIf="form.controls.patente.errors?.['minlength']">La patente debe tener al menos 7 caracteres.</div>
+  <div *ngIf="form.controls.patente.errors?.['maxlength']">La patente no puede tener más de 7 caracteres.</div>
+  <div *ngIf="form.controls.patente.errors?.['pattern']">La patente debe contener solo letras y números.</div>
+</div>
+
+<ion-item>
+  <ion-label>Seleccionar Vehículo</ion-label>
+  <ion-select formControlName="patente" placeholder="Selecciona una matrícula">
+    <ion-select-option *ngFor="let vehicle of (vehicles$ | async)" [value]="vehicle.matricula">
+      {{ vehicle.matricula }}
+    </ion-select-option>
+  </ion-select>
+</ion-item>
+
+
+
+    <!-- Price-->
+    <app-custom-input
+    [control]="form.controls.price"
+    type="number"
+    label="Precio"
+    (ionInput)="setNumberInputs()"
+    ></app-custom-input>
+    
+<!-- Validadores del Price-->
+    <div class="validators" *ngIf="form.controls.price.errors && form.controls.price.touched">
+      <div *ngIf="form.controls.price.errors?.['required']"> Este Campo es Requerido</div>
+      <div *ngIf="form.controls.price.errors?.['min']">Precio Minimo no puede ser inferior a 1.</div>
+    </div>
+
+    <!-- Sold Units-->
+    <app-custom-input
+    [control]="form.controls.soldUnits"
+    type="number"
+    label="Asientos Disponibles"
+    (ionInput)="setNumberInputs()"
+    ></app-custom-input>
+    
+<!-- Validadores del S.U-->
+
+    <div class="validators" *ngIf="form.controls.soldUnits.errors && form.controls.soldUnits.touched">
+      <div *ngIf="form.controls.soldUnits.errors?.['required']"> Este Campo es Requerido</div>
+      <div *ngIf="form.controls.soldUnits.errors?.['min']">Cantidad Minima no puede ser inferior a 1.</div>
+    </div>    
+
+    <!-- Hora de salida -->
+    
+    <ion-item>
+      <ion-label>Hora de Salida</ion-label>
+      <ion-datetime
+        presentation="time" 
+        displayFormat="h:mm A"
+        pickerFormat="h:mm A"
+        formControlName="departureTime">
+      </ion-datetime>
+    </ion-item>
+    <ion-button   mode="ios" class="ion-margin" type="submit" [disabled]="form.invalid" color="warning"> <strong color="secondary">
+    {{ product ? 'Actualizar Viaje': 'Agregar Viaje'}} </strong>
+      <ion-icon slot="end" name="checkmark-circle-outline"></ion-icon>
+    </ion-button>
+  </form>
+
+
+
+</ion-content>
