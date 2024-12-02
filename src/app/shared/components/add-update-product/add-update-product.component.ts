@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { ModalController } from '@ionic/angular';
 import { VehicleService } from 'src/app/services/vehicle.service';
+import { Network } from '@capacitor/network';
 
 @Component({
   selector: 'app-add-update-product',
@@ -43,9 +44,17 @@ export class AddUpdateProductComponent implements OnInit {
   user = {} as User;
   ubicaciones$!: Observable<any[]>;
 
-  ngOnInit() {
+ async ngOnInit() {
     this.user = this.utilsSvc.getFromLocalStorage('user');
     
+    const networkStatus = await Network.getStatus();
+  if (networkStatus.connected) {
+    this.loadUbicaciones();
+    this.loadVehicles();
+  } else {
+    this.loadFromLocalStorage();
+  }
+
     if (this.product) {
       this.form.setValue({
         id: this.product.id,
@@ -67,6 +76,9 @@ export class AddUpdateProductComponent implements OnInit {
 
   loadUbicaciones() {
     this.ubicaciones$ = this.firebaseSvc.getUbicacionesDeUsuario(this.user.uid);
+    this.ubicaciones$.subscribe(ubicaciones => {
+      localStorage.setItem(`ubicaciones_${this.user.uid}`, JSON.stringify(ubicaciones));
+    });
   }
 
   //===========TOMAR/SELECCIONAR UNA FOTO
@@ -181,15 +193,24 @@ export class AddUpdateProductComponent implements OnInit {
 
 
   loadVehicles() {
-    const userId = this.user?.uid; // Firebase usa 'uid' para el ID del usuario
+    const userId = this.user?.uid;
     if (userId) {
       this.vehicles$ = this.vehicleService.getVehiclesByUser(userId);
+      this.vehicles$.subscribe(vehicles => {
+        localStorage.setItem(`vehicles_${this.user.uid}`, JSON.stringify(vehicles));
+      });
     } else {
-      this.vehicles$ = of([]); // No carga vehículos si no hay userId
+      this.vehicles$ = of([]);
     }
   }
 
-
+  loadFromLocalStorage() {
+    const ubicaciones = localStorage.getItem(`ubicaciones_${this.user.uid}`);
+    const vehicles = localStorage.getItem(`vehicles_${this.user.uid}`);
+    
+    this.ubicaciones$ = of(ubicaciones ? JSON.parse(ubicaciones) : []);
+    this.vehicles$ = of(vehicles ? JSON.parse(vehicles) : []);
+  }
 
 
 }
