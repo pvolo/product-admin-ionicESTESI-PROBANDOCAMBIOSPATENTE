@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { VerReservadosComponent } from 'src/app/shared/components/verreservados/verreservados.component';
 import { ModalController } from '@ionic/angular';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
+import { Network } from '@capacitor/network';
 
 @Component({
   selector: 'app-home',
@@ -54,22 +55,37 @@ return this.products.reduce((index,product)=>index + product.price * product.sol
 
   //====Obtener los Productos
   getProducts() {
-    const path = `users/${this.user().uid}/products`;
     this.loading = true;
-  
-    const query = [
-      orderBy('soldUnits', 'desc')
-    ];
-  
-    const sub = this.fireBaseSvs.getCollectionData(path, query).subscribe({
-      next: (res: any) => {
-        this.products = res;
-        this.loading = false;
-        sub.unsubscribe();
-      }
-    });
-  }
 
+    // Verifica si hay conexión a internet
+    Network.getStatus().then((status) => {
+        if (status.connected) {
+            // Si está conectado a internet, obtiene los productos desde Firebase
+            const path = `users/${this.user().uid}/products`;
+            const query = [orderBy('soldUnits', 'desc')];
+    
+            const sub = this.fireBaseSvs.getCollectionData(path, query).subscribe({
+                next: (res: any) => {
+                    this.products = res;
+                    localStorage.setItem('products', JSON.stringify(res));  // Guarda los productos en LocalStorage
+                    this.loading = false;
+                    sub.unsubscribe();
+                },
+                error: (err) => {
+                    this.loading = false;
+                    console.error('Error al obtener los productos de Firebase', err);
+                }
+            });
+        } else {
+            // Si no hay conexión, intenta cargar los productos desde LocalStorage
+            const storedProducts = localStorage.getItem('products');
+            if (storedProducts) {
+                this.products = JSON.parse(storedProducts);
+            }
+            this.loading = false;
+        }
+    });
+}
   //====Agregar o Actualizar Producto
   async addUpdateProduct(product?: Product){
 
