@@ -10,6 +10,7 @@ import { AngularFireStorage } from '@angular/fire/compat/storage';
 import{getStorage,uploadString,ref,getDownloadURL,deleteObject} from "firebase/storage"
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Network } from '@capacitor/network';
 
 
 
@@ -73,10 +74,10 @@ export class FirebaseService {
   getUbicacionPorNombreRuta(nombreRuta: string): Observable<any> {
     // Realizar una consulta en todas las subcolecciones 'ubicaciones' de los usuarios
     return this.firestore
-      .collectionGroup('ubicaciones', ref => ref.where('nombreRuta', '==', nombreRuta))  // Consulta a nivel global por nombreRuta
+      .collectionGroup('ubicaciones', ref => ref.where('nombreRuta', '==', nombreRuta)) 
       .valueChanges()
       .pipe(
-        map(ubicaciones => ubicaciones.length > 0 ? ubicaciones[0] : null)  // Asume que hay solo una ubicación por nombreRuta
+        map(ubicaciones => ubicaciones.length > 0 ? ubicaciones[0] : null) 
       );
   }
 
@@ -85,7 +86,7 @@ export class FirebaseService {
 
     getCollectionData(path: string, collectionQuery?: any) {
       const ref = collection(getFirestore(), path);
-      const queryRef = collectionQuery ? query(ref, ...collectionQuery) : ref;  // Aplica la query si se pasa
+      const queryRef = collectionQuery ? query(ref, ...collectionQuery) : ref;  
     
       return collectionData(queryRef, { idField: 'id' });
     }
@@ -153,12 +154,10 @@ export class FirebaseService {
   //==== Obtener los productos de todos los usuarios
   getAllProducts() {
     
-    // Primero obtenemos todos los usuarios
-    const usersRef = collection(getFirestore(), 'users'); // Reemplaza 'users' por tu ruta correcta si es diferente
+    const usersRef = collection(getFirestore(), 'users'); 
     const usersQuery = query(usersRef);
 
     return collectionData(usersQuery, { idField: 'uid' });
-     // Devuelve los usuarios
   }
 
   //==== Obtener los productos de un usuario específico
@@ -204,32 +203,49 @@ updateProductSoldUnits(uid: string, productId: string, reservedSeats: number) {
 
   // Método para obtener las ubicaciones del usuario
   getUbicacionesDeUsuario(userId: string): Observable<any[]> {
-    return this.firestore.collection(`users/${userId}/ubicaciones`).valueChanges(); // Correcto, solo recuperamos los datos
+    return this.firestore.collection(`users/${userId}/ubicaciones`).valueChanges(); 
   }
 
  // Método para obtener el UID del usuario logueado
  getCurrentUserUid(): Observable<string | null> {
   return this.auth.authState.pipe(
-    // 'authState' emite el usuario cuando cambia
     map(user => user ? user.uid : null)
   );
 }
 
 // Método para obtener las reservaciones de un usuario por su UID
-getUserReservations(uid: string): Observable<any[]> {
-  const reservationsRef = collection(getFirestore(), 'reservados');
-  
-  const q = query(reservationsRef, where('userUid', '==', uid));
+async getUserReservations(uid: string): Promise<any[]> {
+  const online = await this.isOnline();
 
-  return from(getDocs(q).then(querySnapshot => {
-    const reservas = querySnapshot.docs.map(doc => doc.data());
-    return reservas; 
-  }));
+  if (online) {
+    const reservations = await this.fetchReservationsFromFirestore(uid);
+    localStorage.setItem(`reservations_${uid}`, JSON.stringify(reservations));
+    return reservations;
+  } else {
+    const localData = localStorage.getItem(`reservations_${uid}`);
+    return localData ? JSON.parse(localData) : [];
+  }
 }
 
 
+private async fetchReservationsFromFirestore(uid: string): Promise<any[]> {
+  const reservationsRef = collection(getFirestore(), 'reservados');
+  const q = query(reservationsRef, where('userUid', '==', uid));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data());
+}
 
+saveReservationLocally(uid: string, reservation: any) {
+  const localData = localStorage.getItem(`reservations_${uid}`);
+  const reservations = localData ? JSON.parse(localData) : [];
+  reservations.push(reservation);
+  localStorage.setItem(`reservations_${uid}`, JSON.stringify(reservations));
+}
 
+async isOnline(): Promise<boolean> {
+  const status = await Network.getStatus();
+  return status.connected;
+}
 
 
 getRutasDeUsuario(userUid: string): Observable<any[]> {

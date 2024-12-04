@@ -5,6 +5,9 @@ import { Product } from 'src/app/models/product.model';
 import { User } from 'src/app/models/user.model';
 import { AddUpdateProductComponent } from 'src/app/shared/components/add-update-product/add-update-product.component';
 import { ReserveComponent } from 'src/app/shared/components/reserve/reserve.component';
+import { ReservationsModalComponent } from 'src/app/shared/components/reservations-modal/reservations-modal.component';
+import { ModalController } from '@ionic/angular';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-takecar',
@@ -18,7 +21,10 @@ export class TakecarPage implements OnInit {
   products: Product[] = [];
   loading = false;
   userUid: string;
+  userUid$: Observable<string | null> = this.firebaseSvc.getCurrentUserUid();
+  constructor(private modalController: ModalController, 
 
+  ) {}
 
   ngOnInit() {
     this.userUid = this.user()?.uid;
@@ -121,4 +127,21 @@ export class TakecarPage implements OnInit {
       return false;
     });
   }
+
+
+  async openReservationsModal() {
+    this.userUid$.subscribe((userUid) => {
+      if (!userUid) {
+        console.error('No hay un usuario autenticado');
+        return;
+      }
+      this.modalController.create({
+        component: ReservationsModalComponent,
+        componentProps: {
+          userUid: userUid,
+        },
+      }).then((modal) => modal.present());
+    });
+  }
+  
 }
