@@ -10,6 +10,11 @@
     </div>
   </ion-card>
 
+  <ion-item  button (click)="openReservationsModal()">
+    <ion-icon slot="start" name="arrow-redo-circle-outline" color="warning"></ion-icon>
+    <ion-label> <strong>VER RESERVAS ACEPTADAS</strong></ion-label>
+  </ion-item>
+
   <ion-list *ngIf="!loading">
     <ion-item-sliding class="product-item" *ngFor="let p of filteredProducts">
       <ng-container *ngIf="p.userUid !== user()?.uid">
